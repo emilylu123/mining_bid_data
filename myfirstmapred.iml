@@ -39,5 +39,8 @@
         <jarDirectory url="file:///usr/local/Cellar/hadoop/3.3.0/libexec/share/hadoop/common/lib" recursive="false" />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="common" level="project" />
+    <orderEntry type="library" name="accessors-smart-1.2" level="project" />
+    <orderEntry type="library" name="accessors-smart-1.21" level="project" />
   </component>
 </module>
