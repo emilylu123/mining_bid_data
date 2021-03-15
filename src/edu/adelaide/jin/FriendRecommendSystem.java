@@ -164,14 +164,14 @@ public class FriendRecommendSystem {
             SortedMap<Long, List> sortedRecSet = new TreeMap( new Comparator<Long>() {
                 @Override
                 public int compare(Long k1, Long k2) {
-                    int f1 = recSet.get( k1 ).size();
-                    int f2 = recSet.get( k2 ).size();
-                    if (f1 < f2)
-                        return 1;
-                    else if (f1 == f2 && k1 < k2)
-                        return 1;
-                    else
+                    int fn1 = recSet.get( k1 ).size();
+                    int fn2 = recSet.get( k2 ).size();
+                    if (fn1 > fn2)
                         return -1;
+                    else if (fn1 == fn2 && k1 < k2)
+                        return -1;
+                    else
+                        return 1;
                 }
             });
 
