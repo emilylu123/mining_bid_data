@@ -175,13 +175,8 @@ public class RecommendedFriend {
             for(Map.Entry<Long,List> content: sortedRecSet.entrySet()){
                 count++;
 
-                if(tmpSize == content.getValue().size()) {
-                    text += content.getKey() + "(" + content.getValue().toString() + "),";
-                }
-                else {
-                    text += content.getKey() + ",";
-                    tmpSize = content.getValue().size();
-                }
+                text += content.getKey() + ",";
+
                 if(count == 10)
                     break;
             }
