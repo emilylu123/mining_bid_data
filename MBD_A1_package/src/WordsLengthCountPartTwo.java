@@ -16,18 +16,19 @@ import org.apache.hadoop.util.ToolRunner;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringTokenizer;
 
-public class WordsLengthCountPartTwoV2 extends Configured implements Tool {
+public class WordsLengthCountPartTwo extends Configured implements Tool {
 
     public static void main(String[] args) throws Exception {
-        int res = ToolRunner.run(new Configuration(), new WordsLengthCountPartTwoV2(), args);
+        int res = ToolRunner.run(new Configuration(), new WordsLengthCountPartTwo(), args);
         System.exit( res );
     }
 
     @Override
     public int run(String[] args) throws Exception {
-        Job job = new Job(getConf(), "WordsLengthCountPartTwo");
-        job.setJarByClass( WordsLengthCountPartTwoV2.class );
+        Job job = new Job(getConf());
+        job.setJarByClass( WordsLengthCountPartTwo.class );
 
         job.setMapOutputKeyClass( IntWritable.class );
         job.setMapOutputValueClass( Text.class );
@@ -50,18 +51,29 @@ public class WordsLengthCountPartTwoV2 extends Configured implements Tool {
      * split the lien by any character which is not letter.
      * */
     private static class WordsLengthCountPartTwoMapper extends Mapper<LongWritable, Text, IntWritable, Text>{
-        Text out = null;
-
+//        Text out = null;
+        StringTokenizer st = null;
         @Override
         protected void map(LongWritable key, Text text, Context context)
             throws IOException, InterruptedException {
-            String line = text.toString().toLowerCase();
-            String [] word = line.split( " " );
-            for(int i = 0 ; i < word.length; i++){
-                String tmp = word[i].replaceAll( "[^\\w]","" );
-                int len = tmp.length();
-                out = new Text(tmp);
-                context.write( new IntWritable(len),out );
+
+            st = new StringTokenizer( text.toString().toLowerCase() );
+            while(st.hasMoreTokens()){
+                int len;
+                String oneWord = st.nextToken();
+                int index = 0;
+                // need to trim the string before next reduce
+                while(index<oneWord.length()){
+                    // if there is a no-letter in the string, index don't need to add 1
+                    if(!Character.isLetter(oneWord.charAt( index )  )){
+                        oneWord = oneWord.substring( 0,index ) + oneWord.substring( index + 1 );
+                        continue;
+                    }
+                    index++;
+                }
+
+                len = oneWord.length();
+                context.write( new IntWritable(len), new Text(oneWord) );
             }
         }
     }
@@ -76,16 +88,16 @@ public class WordsLengthCountPartTwoV2 extends Configured implements Tool {
         protected void reduce(IntWritable length, Iterable<Text> textSet, Context context) throws IOException, InterruptedException {
 
             Map<String,Integer> tmpSet = new HashMap<>();
+
             while(textSet.iterator().hasNext()){
                 String word = textSet.iterator().next().toString();
-                if(tmpSet.isEmpty())
-                    tmpSet.put( word,1 );
-                else
+                // if there is not a string a key add it in the map.
                 if(!tmpSet.containsKey( word ))
                     tmpSet.put( word,1 );
                 else
                     continue;
             }
+            // the frequency is just the size of the map.
             IntWritable frequency =new IntWritable(tmpSet.size());
             context.write( length,frequency );
         }

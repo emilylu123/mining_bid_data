@@ -14,18 +14,15 @@ import java.io.IOException;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
-public class WordsLengthCountPartOnev2 {
+public class WordsLengthCountPartOne {
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf);
-        job.setJarByClass( WordsLengthCountPartOnev2.class );
+        Job job = Job.getInstance(conf,"WordsLengthCountPartOne");
+        job.setJarByClass( WordsLengthCountPartOne.class );
 
         job.setMapperClass( WordLengthCountMapper.class );
         job.setReducerClass( WordLengthCountReducer.class );
-
-//        job.setMapOutputKeyClass(IntWritable.class);
-//        job.setMapOutputValueClass( Text.class );
 
         job.setOutputKeyClass( IntWritable.class );
         job.setOutputValueClass( Text.class );
@@ -39,22 +36,24 @@ public class WordsLengthCountPartOnev2 {
     }
     // Read the file,
     // map the words by the length of the words.
-    private static class WordLengthCountMapper extends Mapper<LongWritable,Text,IntWritable, Text>{
+    private static class WordLengthCountMapper extends Mapper<LongWritable, Text, IntWritable, Text>{
         StringTokenizer st = null;
         @Override
         protected void map(LongWritable key, Text text, Context context)
             throws IOException, InterruptedException {
             //  want to use regular expression as the symbol to split different words.
-            // "/[^0-9^a-z]/g" if it is not 0-9 nor a-z nor -,
-//            st= new StringTokenizer( text.toString().toLowerCase() );
-            text.set(text.toString().toLowerCase());
-            String[] word = text.toString().split( " " );
-            for(String oneWord : word){
-                String tmp = oneWord.replaceAll( "[^\\w]","" ) ;
-                int length = tmp.length();
-                if (length > 30)
-                    System.out.println(length +": "+oneWord + "---->" + tmp);
-                context.write( new IntWritable(length), new Text(oneWord));
+
+            st = new StringTokenizer( text.toString().toLowerCase() );
+            while(st.hasMoreTokens()){
+                // only letters are caculated
+                String oneWord = st.nextToken();
+                int len = 0;
+                for(int i =0; i<oneWord.length(); i++){
+                    if(Character.isLetter(oneWord.charAt( i ))){
+                        len++;
+                    }
+                }
+                context.write( new IntWritable(len), new Text(oneWord) );
             }
         }
     }
@@ -64,10 +63,13 @@ public class WordsLengthCountPartOnev2 {
         @Override
         protected void reduce(IntWritable key, Iterable<Text> textCollection, Context context)
             throws IOException, InterruptedException {
+
             TreeMap<String, Integer> wordCountMap = new TreeMap<>();
+
             int wordNumWithSameLength = 0;
             while(textCollection.iterator().hasNext()){
                 wordNumWithSameLength++;
+                // for logs
                 String keyWord = textCollection.iterator().next().toString();
                 if(wordCountMap.containsKey( keyWord )){
                     int tmp = wordCountMap.get(keyWord).intValue() + 1;
@@ -78,7 +80,7 @@ public class WordsLengthCountPartOnev2 {
             }
             String statistic = wordNumWithSameLength + "\n" ;
 
-            // Print the detail that how many times a word appeared.
+            // Print the log of detail that how many times a word appeared.
 //            for(Map.Entry<String,Integer> entry : wordCountMap.entrySet()){
 //                statistic +=  entry.getKey() + " " + entry.getValue() + "\n";
 //            }
